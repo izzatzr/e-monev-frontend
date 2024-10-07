@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   ArrowDownTrayIcon,
   MagnifyingGlassIcon,
 } from '@heroicons/react/24/solid';
 import { useQuery } from 'react-query';
 import { useAuthHeader } from 'react-auth-kit';
+import DropdownSelect from '../../../components/DropdownSelect';
 import useSearchParamsState from '../../../hooks/useSearchParamsState';
 import getTriwulan from '../../../api/static/getTriwulan';
 import getFundSource from '../../../api/user/triwulan/getFundSource';
+import Button from '../../../components/Button';
 import useDebounce from '../../../hooks/useDebounce';
 import objectToQueryString from '../../../utils/objectToQueryString';
 import downloadTriwulanExcel from '../../../api/admin/report/downloadTriwulanExcel';
@@ -16,39 +18,36 @@ import { useToastContext } from '../../../context/ToastContext';
 import downloadMasterExcel from '../../../api/admin/report/downloadMasterExcel';
 import downloadMasterPdf from '../../../api/admin/report/downloadMasterPdf';
 import downloadTriwulanPdf from '../../../api/admin/report/downloadTriwulanPdf';
-import {
-  Dropdown,
-  DropdownContent,
-  DropdownItem,
-  DropdownTrigger,
-  DropdownValue,
-} from '../../../components/DropdownSelectV2';
-import {
-  bentukKegiatanData,
-  caraPengadaanData,
-  jenisPengadaanData,
-  programPrioritasData,
-} from '../../User/Triwulan/constants';
-import ButtonV2 from '../../../components/ButtonV2';
+
+// const type = [
+//   {
+//     label: 'Data Laporan Master',
+//     value: 'data-master',
+//   },
+//   {
+//     label: 'Data Laporan Kegiatan',
+//     value: 'data-triwulan',
+//   },
+// ];
 
 const months = [
-  { id: 1, name: 'Januari' },
-  { id: 2, name: 'Februari' },
-  { id: 3, name: 'Maret' },
-  { id: 4, name: 'April' },
-  { id: 5, name: 'Mei' },
-  { id: 6, name: 'Juni' },
-  { id: 7, name: 'Juli' },
-  { id: 8, name: 'Agustus' },
-  { id: 9, name: 'September' },
-  { id: 10, name: 'Oktober' },
-  { id: 11, name: 'November' },
-  { id: 12, name: 'Desember' },
+  { label: 'Januari', value: 1 },
+  { label: 'Februari', value: 2 },
+  { label: 'Maret', value: 3 },
+  { label: 'April', value: 4 },
+  { label: 'Mei', value: 5 },
+  { label: 'Juni', value: 6 },
+  { label: 'Juli', value: 7 },
+  { label: 'Agustus', value: 8 },
+  { label: 'September', value: 9 },
+  { label: 'Oktober', value: 10 },
+  { label: 'November', value: 11 },
+  { label: 'Desember', value: 12 },
 ];
 
 const years = Array.from({ length: 38 }, (_, i) => ({
-  id: (2023 + i).toString(),
-  name: (2023 + i).toString(),
+  label: (2023 + i).toString(),
+  value: (2023 + i).toString(),
 }));
 
 const initialFundSourceParams = {
@@ -63,29 +62,25 @@ const initialFilterParams = {
   sort: 'terbaru',
 };
 
-const initialFilters = {
-  month: '',
-  year: '',
-  triwulan_id: '',
-  fund_source_id: '',
-  tipe_pengadaan: '',
-  bentuk_pengadaan: '',
-  cara_pengadaan: '',
-  program_prio: '',
-};
-
 const ReportTableWrapper = () => {
   const authHeader = useAuthHeader();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { showToastMessage } = useToastContext();
 
-  const [filters, setFilters] = React.useState(initialFilters);
+  const [selectedType, setSelectedType] = useState({
+    label: 'Data Laporan Kegiatan',
+    value: 'data-triwulan',
+  });
+  const [selectedMonth, setSelectedMonth] = useState(null);
+  const [selectedTriwulan, setSelectedTriwulan] = useState(null);
+  const [selectedYear, setSelectedYear] = useState(null);
+  const [selectedFundSource, setSelectedFundSource] = useState(null);
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 500);
 
   const [searchParamsState, setSearchParamsState] =
     useSearchParamsState(initialFilterParams);
-
-  const [search, setSearch] = useState('');
-  const debouncedSearch = useDebounce(search, 500);
 
   useEffect(() => {
     setSearchParamsState({
@@ -174,14 +169,40 @@ const ReportTableWrapper = () => {
     }
   };
 
-  const handleSelectFilter = (key, value) => {
-    setFilters({
-      ...filters,
-      [key]: value,
-    });
+  // const onSelectType = (item) => {
+  //   console.log(item);
+  //   setSelectedType(item);
+  // };
+
+  const onSelectMonth = (item) => {
+    setSelectedMonth(item);
     setSearchParamsState({
       ...searchParamsState,
-      [key]: value,
+      month: item.value,
+    });
+  };
+
+  const onSelectTriwulan = (item) => {
+    setSelectedTriwulan(item);
+    setSearchParamsState({
+      ...searchParamsState,
+      triwulan_id: item.id,
+    });
+  };
+
+  const onSelectYear = (item) => {
+    setSelectedYear(item);
+    setSearchParamsState({
+      ...searchParamsState,
+      year: item.value,
+    });
+  };
+
+  const onSelectFundSource = (item) => {
+    setSelectedFundSource(item);
+    setSearchParamsState({
+      ...searchParamsState,
+      fund_source_id: item.id,
     });
   };
 
@@ -191,12 +212,25 @@ const ReportTableWrapper = () => {
 
   const resetFilter = () => {
     setSearchParamsState(initialFilterParams);
-    setFilters(initialFilters);
+    setSelectedType({ label: 'Data Laporan Kegiatan', value: 'data-triwulan' });
+    setSelectedMonth(null);
+    setSelectedYear(null);
+    setSelectedTriwulan(null);
+    setSelectedFundSource(null);
     setSearch('');
-
     const queryString = objectToQueryString(initialFilterParams);
     navigate(`/laporan?${queryString}`);
   };
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (selectedType && selectedType.value === 'data-master') {
+      navigate(`data-master?${params.toString()}`);
+    } else if (selectedType && selectedType.value === 'data-triwulan') {
+      navigate(`data-triwulan?${params.toString()}`);
+    }
+  }, [selectedType]);
 
   return (
     <>
@@ -205,7 +239,16 @@ const ReportTableWrapper = () => {
       </div>
 
       <div className="flex items-center justify-between mt-6">
-        <div style={{ minWidth: '14rem' }} />
+        <div style={{ minWidth: "14rem" }} />
+        {/* <DropdownSelect
+          value={selectedType}
+          options={type}
+          onChange={onSelectType}
+          minWidth="14rem"
+        >
+          <DropdownSelect.HeaderV2 label="Pilih Data Laporan" />
+        </DropdownSelect> */}
+
         <div className="relative w-1/3">
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
             <MagnifyingGlassIcon className="w-4 h-4" />
@@ -220,163 +263,84 @@ const ReportTableWrapper = () => {
         </div>
       </div>
 
-      <div className="mt-3">
-        <div className="flex space-x-2 mb-6 md:justify-end">
-          <ButtonV2
+      <div className="flex justify-between mt-3 space-x-3">
+        <div className="flex space-x-3">
+          <div className="grid grid-cols-2 gap-3">
+            {/* Month Dropdown */}
+            <DropdownSelect
+              value={selectedMonth}
+              options={months}
+              onChange={onSelectMonth}
+              minWidth="14rem"
+            >
+              <DropdownSelect.HeaderV2 label="Pilih Bulan" />
+            </DropdownSelect>
+
+            {/* Years Dropdown */}
+            <DropdownSelect
+              value={selectedYear}
+              options={years}
+              onChange={onSelectYear}
+              minWidth="14rem"
+            >
+              <DropdownSelect.HeaderV2 label="Pilih Tahun" />
+            </DropdownSelect>
+
+            {/* Triwulan Dropdown */}
+            <DropdownSelect
+              value={selectedTriwulan}
+              options={triwulanQuery.data?.data || []}
+              onChange={onSelectTriwulan}
+              minWidth="14rem"
+            >
+              <DropdownSelect.HeaderV2 label="Pilih Triwulan" />
+            </DropdownSelect>
+
+            {/* Sumber Dana Dropdown */}
+            <DropdownSelect
+              value={selectedFundSource}
+              options={fundSourceQuery.data?.data?.result || []}
+              onChange={onSelectFundSource}
+              minWidth="14rem"
+            >
+              <DropdownSelect.HeaderV2 label="Pilih Sumber Dana" />
+            </DropdownSelect>
+          </div>
+
+          <Button
+            className="px-3"
+            background="bg-primary"
+            textColor="text-white"
+            onClick={resetFilter}
+          >
+            Reset
+          </Button>
+        </div>
+
+        <div className="flex space-x-2">
+          <Button
+            className="w-28 lg:w-auto"
             type="submit"
-            className="w-full md:w-fit bg-primary text-white"
+            background="bg-primary"
+            textColor="text-white"
             icon={<ArrowDownTrayIcon className="w-6 h-6" />}
             onClick={handleDownloadPDF}
           >
             Unduh Data (PDF)
-          </ButtonV2>
-          <ButtonV2
+          </Button>
+          <Button
+            className="w-28 lg:w-auto"
             type="submit"
-            className="w-full md:w-fit bg-primary text-white"
+            background="bg-primary"
+            textColor="text-white"
             icon={<ArrowDownTrayIcon className="w-6 h-6" />}
             onClick={handleDownloadExcel}
           >
             Unduh Data (XLS)
-          </ButtonV2>
-        </div>
-
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 xl:grid-cols-4 grid-cols-subgrid">
-          <Dropdown
-            value={filters.fund_source_id}
-            onValueChange={(value) =>
-              handleSelectFilter('fund_source_id', value)
-            }
-          >
-            <DropdownTrigger>
-              <DropdownValue placeholder="Pilih Sumber Dana" />
-            </DropdownTrigger>
-            <DropdownContent>
-              {fundSourceQuery.data?.data?.result.map((fundSource) => (
-                <DropdownItem value={fundSource.id}>
-                  {fundSource.name}
-                </DropdownItem>
-              ))}
-            </DropdownContent>
-          </Dropdown>
-
-          <Dropdown
-            value={filters.month}
-            onValueChange={(value) => handleSelectFilter('month', value)}
-          >
-            <DropdownTrigger>
-              <DropdownValue placeholder="Pilih Bulan" />
-            </DropdownTrigger>
-            <DropdownContent>
-              {months.map((month) => (
-                <DropdownItem value={month.id}>{month.name}</DropdownItem>
-              ))}
-            </DropdownContent>
-          </Dropdown>
-
-          <Dropdown
-            value={filters.year}
-            onValueChange={(value) => handleSelectFilter('year', value)}
-          >
-            <DropdownTrigger>
-              <DropdownValue placeholder="Pilih Tahun" />
-            </DropdownTrigger>
-            <DropdownContent>
-              {years.map((year) => (
-                <DropdownItem value={year.id}>{year.name}</DropdownItem>
-              ))}
-            </DropdownContent>
-          </Dropdown>
-
-          <Dropdown
-            value={filters.triwulan_id}
-            onValueChange={(value) => handleSelectFilter('triwulan_id', value)}
-          >
-            <DropdownTrigger>
-              <DropdownValue placeholder="Pilih Triwulan" />
-            </DropdownTrigger>
-            <DropdownContent>
-              {triwulanQuery.data?.data?.map((triwulan) => (
-                <DropdownItem value={triwulan.id}>{triwulan.name}</DropdownItem>
-              ))}
-            </DropdownContent>
-          </Dropdown>
-
-          <Dropdown
-            value={filters.tipe_pengadaan}
-            onValueChange={(value) =>
-              handleSelectFilter('tipe_pengadaan', value)
-            }
-          >
-            <DropdownTrigger>
-              <DropdownValue placeholder="Pilih Jenis Pengadaan" />
-            </DropdownTrigger>
-            <DropdownContent>
-              {jenisPengadaanData.map((jenisPengadaan) => (
-                <DropdownItem value={jenisPengadaan.name}>
-                  {jenisPengadaan.name}
-                </DropdownItem>
-              ))}
-            </DropdownContent>
-          </Dropdown>
-
-          <Dropdown
-            value={filters.cara_pengadaan}
-            onValueChange={(value) =>
-              handleSelectFilter('cara_pengadaan', value)
-            }
-          >
-            <DropdownTrigger>
-              <DropdownValue placeholder="Pilih Cara Pengadaan" />
-            </DropdownTrigger>
-            <DropdownContent>
-              {caraPengadaanData.map((caraPengadaan) => (
-                <DropdownItem value={caraPengadaan.name}>
-                  {caraPengadaan.name}
-                </DropdownItem>
-              ))}
-            </DropdownContent>
-          </Dropdown>
-
-          <Dropdown
-            value={filters.bentuk_pengadaan}
-            onValueChange={(value) =>
-              handleSelectFilter('bentuk_pengadaan', value)
-            }
-          >
-            <DropdownTrigger>
-              <DropdownValue placeholder="Pilih Bentuk Pengadaan" />
-            </DropdownTrigger>
-            <DropdownContent>
-              {bentukKegiatanData.map((bentuk) => (
-                <DropdownItem value={bentuk.name}>{bentuk.name}</DropdownItem>
-              ))}
-            </DropdownContent>
-          </Dropdown>
-
-          <Dropdown
-            value={filters.program_prio}
-            onValueChange={(value) => handleSelectFilter('program_prio', value)}
-          >
-            <DropdownTrigger>
-              <DropdownValue placeholder="Pilih Program Prioritas" />
-            </DropdownTrigger>
-            <DropdownContent>
-              {programPrioritasData.map((programPrio) => (
-                <DropdownItem value={programPrio.name}>
-                  {programPrio.name}
-                </DropdownItem>
-              ))}
-            </DropdownContent>
-          </Dropdown>
-
-          <ButtonV2
-            className="px-3 bg-primary text-white w-full col-span-2 lg:col-span-1 place-self-end lg:col-start-4"
-            onClick={resetFilter}
-          >
-            Reset
-          </ButtonV2>
+          </Button>
         </div>
       </div>
+
       <Outlet />
     </>
   );
