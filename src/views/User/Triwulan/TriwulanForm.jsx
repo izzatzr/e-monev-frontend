@@ -341,7 +341,8 @@ const TriwulanForm = () => {
       if (
         // eslint-disable-next-line no-prototype-builtins
         formDataObject.hasOwnProperty(key) &&
-        formDataObject[key] &&
+        formDataObject[key] !== null &&
+        formDataObject[key] !== undefined &&
         key !== 'file'
       ) {
         formData.append(key, formDataObject[key]);
