@@ -78,7 +78,7 @@ const Login = () => {
           <img src={Logo} className="object-cover w-24 h-24" alt="Logo" />
           <div className="text-white text-center lg:text-left">
             <h1 className="text-2xl lg:text-xl">
-              SISTEM INFORMASI E-MONTIR PEMDA
+              SISTEM INFORMASI E-MONTIR
             </h1>
             <h2 className="text-2xl lg:text-xl">KABUPATEN SORONG</h2>
           </div>

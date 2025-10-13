@@ -221,7 +221,7 @@ const Dashboard = () => {
       <h1 className="font-semibold text-2xl mb-4">
         Halo {authUser().role.name}, Selamat Datang di halaman elektronik
         aplikasi&nbsp;
-        <span className="italic">e-Montir Pemda</span>
+        <span className="italic">e-Montir</span>
       </h1>
 
       <a

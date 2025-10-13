@@ -154,7 +154,7 @@ const Sidebar = ({ isOpen }) => {
           <img src={Logo} className="h-12 mr-4 sm:h-9" alt="E-Monev Logo" />
           <div className="flex flex-col">
             <span className="font-semibold whitespace-nowrap text-white">
-              E-MONTIR PEMDA
+              E-MONTIR
             </span>
             <span className="text-xs text-white">KABUPATEN SORONG</span>
           </div>

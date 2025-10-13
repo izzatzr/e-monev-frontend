@@ -91,7 +91,7 @@ const ForgotPassword = () => {
           <div className="flex space-x-3">
             <img src={Logo} className="w-14" alt="Logo" />
             <div className="text-dark-gray">
-              <h1 className="font-semibold">SISTEM INFORMASI E-MONTIR PEMDA</h1>
+              <h1 className="font-semibold">SISTEM INFORMASI E-MONTIR</h1>
               <h2>KABUPATEN SORONG</h2>
             </div>
           </div>
